@@ -2,16 +2,62 @@
 
 # Задание 1
 
-[Диаграмма контейнеров To-Be](https://www.plantuml.com/plantuml/png/bLPTRnj557tVNp54F2HIOp_04n9IqmJnqL2xjIk4X1IjxS4njNUjtLaY2o4bAUL3GIfK82I46l60U7KgXvWOEt_XxZ_Yd4pMcunJEtcmFJDxpxbtxhdtUk_6nezCqcchzLQWE_vQhHV7gXgktjDgFGoCZzCezjve1VLsqj1gsvXk_4wn6FaxXMRBR2Ur9DPH7POwC8Lws2bsstv0mjNODDgjMd7zxTKoZnv_l5di-B7H4Owsfjo5BcmzRtFjqzBZwbQrLDxQA7toO7d5yyfm70RBNxRqZexkg2NvBTsLORelnp9AVro2HQK7kixMlJ096dxKMuxFzpJzNOOobeaSmVX41bZtFmlaL4RIJ_T8aUwg-qbDHu4sEbvQKLzvIgdynijDt-WTlmUkjVA7wdsxMxBK4ncJGlu5BOXuAh_AW2v1_rpXuIJz3jxwIbwb1t82n2jiqZsQOpd42aS5tC5nosJ6vFipDrLo9XDUEIEoAM00hmbenM7jX4ZYBEr_sEnBNmRuZ45na3vJwJSof2yyXAyv5_x31Skn2tR3Y9DQN8zQNTCAW-ilES2tJSxf3Q_MzNiTLDvrTDIQq7zkdYaKMqE7BXT_P03KP4u-3c5ETR2tofzXqSS1bkDiFqdtc9jq7-KdGriTI22AXGPy00wWPmfZesPBOwD6Np_BBmkAeXp6fXdfoiDDK3bCjXnogciBOH79LJ5pBbV6XJoPW3c5AzqY2YjQnOIH9iLVpBkCMOa8uWSvTlGhrRxGTQDexpSrJ-H5zXm5t8Uge_HWHe67YKxqyXF_yoV-UQ3mGgauI7XJpXewesCRybhNhszhTPy8i7tjUOzqUphDilb2xnmH-414wg0mS8Z_e5ejL-weH-zLgiMFAgK7Z8WCKsGsAq3mZ4bdHTago_gGD9VmL-6s2bxNokIoKXw1ZoKzdCisqzk7UHqi15zkufTJ-ViCmgB1j8XZshals6Ks3m2Ui2K1jy8SknJao8RkfGRxc_ypLWwR2Uo_vuvuMuG4PYcqlxU2ElcwlBqTKPwxR7Kh-4NQyXPoiLbBdCFUOd42cKETq9r9c3wt_WVK15FlgPmfEPsPXUdJURfCU-uG-2DsjPnYHM9Q52BTRF6rGZV8uiUze8x5cyPlnk_QhIFN74B4yorhXGTCcnlfF0-v6FDzqEZYPQdRrcPXs9PgDiy_WN4VlFoJshNSLySlxy03B4TiwKdMMkd1pLpc8-8bxZ0MgZgwq3JIVcELQM5pSTZCp8ivFZplhWuQVF7x7m00)
+1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
+Результат представьте в виде контейнерной диаграммы в нотации С4.
+Добавьте ссылку на файл в этот шаблон
+[ссылка на файл](ссылка)
 
 # Задание 2
 
-![Тесты](img/test1.png)
+### 1. Proxy
+Команда КиноБездны уже выделила сервис метаданных о фильмах movies и вам необходимо реализовать бесшовный переход с применением паттерна Strangler Fig в части реализации прокси-сервиса (API Gateway), с помощью которого можно будет постепенно переключать траффик, используя фиче-флаг.
 
-![Тесты](img/test2.png)
 
-![Топики кафки](img/kafka.png)
+Реализуйте сервис на любом языке программирования в ./src/microservices/proxy.
+Конфигурация для запуска сервиса через docker-compose уже добавлена
+```yaml
+  proxy-service:
+    build:
+      context: ./src/microservices/proxy
+      dockerfile: Dockerfile
+    container_name: cinemaabyss-proxy-service
+    depends_on:
+      - monolith
+      - movies-service
+      - events-service
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      MONOLITH_URL: http://monolith:8080
+      #монолит
+      MOVIES_SERVICE_URL: http://movies-service:8081 #сервис movies
+      EVENTS_SERVICE_URL: http://events-service:8082 
+      GRADUAL_MIGRATION: "true" # вкл/выкл простого фиче-флага
+      MOVIES_MIGRATION_PERCENT: "50" # процент миграции
+    networks:
+      - cinemaabyss-network
+```
 
+- После реализации запустите postman тесты - они все должны быть зеленые (кроме events).
+- Отправьте запросы к API Gateway:
+   ```bash
+   curl http://localhost:8000/api/movies
+   ```
+- Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
+
+
+### 2. Kafka
+ Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
+
+Для этого нужно сделать MVP сервис events, который будет при вызове API создавать и сам же читать сообщения в топике Kafka.
+
+    - Разработайте сервис на любом языке программирования с consumer'ами и producer'ами.
+    - Реализуйте простой API, при вызове которого будут создаваться события User/Payment/Movie и обрабатываться внутри сервиса с записью в лог
+    - Добавьте в docker-compose новый сервис, kafka там уже есть
+
+Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
+Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
 
 # Задание 3
 

@@ -3,6 +3,8 @@ using CinemaAbyss.Proxy.DependencyInjection;
 using CinemaAbyss.Proxy.Endpoints;
 
 var settings = ProxySettings.FromEnvironment();
+Environment.SetEnvironmentVariable("ASPNETCORE_HTTP_PORTS", null);
+Environment.SetEnvironmentVariable("ASPNETCORE_HTTPS_PORTS", null);
 Environment.SetEnvironmentVariable("ASPNETCORE_URLS", $"http://+:{settings.Port}");
 
 var builder = WebApplication.CreateBuilder(args);
