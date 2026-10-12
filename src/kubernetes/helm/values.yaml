@@ -5,7 +5,7 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: ewogICAgICAgICJhdXRocyI6IHsKICAgICAgICAgICAgICAgICJnaGNyLmlvIjogewogICAgICAgICAgICAgICAgICAgICAgICAiYXV0aCI6ICJUSFZ6YUc1cGEyOTJZVzA2WjJod1h6TTBjVEJUUTAxTFlXTmxaR0ZFWVV3NWRrOTNUMWROYkVwWU4wbFRWVE5wUW01aGNRPT0iCiAgICAgICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICAiZmVhdHVyZXMiOiB7CgkJImhvb2tzIjogInRydWUiCgl9Cn0=
 # Database configuration
 database:
   host: postgres
@@ -112,6 +112,8 @@ eventsService:
 # Kafka configuration
 kafka:
   enabled: true
+  service:
+    port: 9092
   image:
     repository: wurstmeister/kafka
     tag: 2.13-2.7.0
